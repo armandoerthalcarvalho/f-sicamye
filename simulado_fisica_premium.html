@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Física Premium - Dashboard de Performance</title>
+    <!-- Chart.js para as métricas avançadas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #151d30;
+            --bg-selected: #1e2942;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-primary: #6366f1;
+            --accent-hover: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border: #24324f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #a5b4fc, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-title p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .timer-container {
+            background: #1e293b;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--warning);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+            flex-grow: 1;
+        }
+
+        /* Sidebar Navigation Grid */
+        .sidebar {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-mini {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: rgba(99, 102, 241, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-item {
+            background-color: #1e293b;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 0.5rem;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .grid-item:hover {
+            border-color: var(--accent-primary);
+            background-color: var(--bg-selected);
+        }
+
+        .grid-item.active {
+            border-color: var(--accent-primary);
+            background-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .grid-item.correct {
+            background-color: rgba(16, 185, 129, 0.2);
+            border-color: var(--success);
+            color: #34d399;
+        }
+
+        .grid-item.wrong {
+            background-color: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger);
+            color: #f87171;
+        }
+
+        /* Main Quiz Card Area */
+        .quiz-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .quiz-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .topic-badge {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.25rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            font-weight: 500;
+            margin-bottom: 2rem;
+        }
+
+        .math-expr {
+            font-family: 'JetBrains Mono', monospace;
+            background: #1a2333;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            color: #6ee7b7;
+            font-size: 1.1rem;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .option-button {
+            background-color: #1a233a;
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.25rem 1.5rem;
+            text-align: left;
+            color: var(--text-main);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .option-button:hover:not(.disabled) {
+            background-color: var(--bg-selected);
+            border-color: var(--accent-primary);
+            transform: translateX(4px);
+        }
+
+        .option-letter {
+            background: #24324f;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .option-button.selected {
+            border-color: var(--accent-primary);
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .option-button.selected .option-letter {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .option-button.correct-ans {
+            background-color: rgba(16, 185, 129, 0.15) !important;
+            border-color: var(--success) !important;
+        }
+        .option-button.correct-ans .option-letter {
+            background: var(--success) !important;
+            color: white !important;
+        }
+
+        .option-button.wrong-ans {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+            border-color: var(--danger) !important;
+        }
+        .option-button.wrong-ans .option-letter {
+            background: var(--danger) !important;
+            color: white !important;
+        }
+
+        .explanation-box {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #111827;
+            border-left: 4px solid var(--accent-primary);
+            border-radius: 0 0.75rem 0.75rem 0;
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .explanation-box h4 {
+            color: #a5b4fc;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .explanation-box p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Navigation Buttons */
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            background-color: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: var(--accent-hover);
+        }
+
+        .btn:disabled {
+            background-color: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--bg-selected);
+        }
+
+        /* Advanced Metrics Dashboard View */
+        .dashboard-view {
+            display: none;
+            grid-column: 1 / -1;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-val {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+            color: white;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: relative;
+                top: 0;
+            }
+        }
+
+        .chart-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-box h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            align-self: flex-start;
+        }
+
+        .topic-breakdown-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .topic-row {
+            background: #1e293b;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+        }
+
+        .topic-row-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .progress-bar-bg {
+            background: var(--bg-main);
+            height: 8px;
+            border-radius: 4px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent-primary);
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+
+        .feedback-banner {
+            background: linear-gradient(135deg, #1e1b4b, #311042);
+            border: 1px solid #4338ca;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .feedback-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #e0e7ff;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>Simulador de Física Premium</h1>
+            <p>Módulos de Cinemática Avançada & Leis de Newton</p>
+        </div>
+        <div class="timer-container" id="timer">
+            ⏱️ <span id="time-display">00:00</span>
+        </div>
+    </header>
+
+    <div class="main-container">
+        
+        <!-- Sidebar Navigation -->
+        <div class="sidebar" id="sidebar-nav">
+            <div class="sidebar-title">
+                <span>Questões</span>
+                <span class="progress-mini" id="progress-text">0 / 20</span>
+            </div>
+            <div class="question-grid" id="q-grid">
+                <!-- Generated dynamically by JS -->
+            </div>
+            <button class="btn btn-secondary" style="width: 100%;" id="btn-finish-quiz" onclick="showResultsDashboard()">Finalizar e Ver Métricas</button>
+        </div>
+
+        <!-- Quiz Area -->
+        <div class="quiz-area" id="quiz-screen">
+            <div class="quiz-card">
+                <div id="topic-badge" class="topic-badge">Cinemática</div>
+                <div id="question-container">
+                    <p class="question-text" id="q-text">Carregando questão...</p>
+                    <div class="options-container" id="options-box">
+                        <!-- Options generated dynamically -->
+                    </div>
+                </div>
+                
+                <div class="explanation-box" id="explanation-box">
+                    <h4>💡 Resolução Comentada</h4>
+                    <p id="explanation-text">Explicação aqui.</p>
+                </div>
+            </div>
+
+            <div class="nav-controls">
+                <button class="btn btn-secondary" id="btn-prev" onclick="prevQuestion()">⬅️ Anterior</button>
+                <button class="btn" id="btn-next" onclick="nextQuestion()">Próxima ➡️</button>
+            </div>
+        </div>
+
+        <!-- Advanced Dashboard View (Initially Hidden) -->
+        <div class="dashboard-view" id="dashboard-screen">
+            <div class="feedback-banner">
+                <div class="feedback-title" id="feedback-title">Análise Terminada!</div>
+                <p id="feedback-desc" style="color: var(--text-muted);">Aqui está o mapeamento completo do seu desempenho cognitivo nas habilidades de Física.</p>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Precisão Geral</div>
+                    <div class="metric-val" id="metric-accuracy" style="color: var(--success);">0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Score Cognitivo</div>
+                    <div class="metric-val" id="metric-score" style="color: var(--accent-primary);">0 / 2000</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Tempo Total</div>
+                    <div class="metric-val" id="metric-time" style="color: var(--warning);">00:00</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Status Global</div>
+                    <div class="metric-val" id="metric-status" style="font-size: 1.5rem; margin-top: 1.2rem;">Analisando...</div>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-box">
+                    <h3>Performance por Competência (Radar)</h3>
+                    <div style="width: 100%; max-width: 400px; height: 350px;">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3>Aproveitamento por Tópico Específico</h3>
+                    <div class="topic-breakdown-list" id="topic-breakdown-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn" onclick="window.location.reload()">🔄 Reiniciar Simulado</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Data Structure for the 20 High-Quality Questions
+        const questions = [
+            {
+                id: 1,
+                topic: "Conceitos Básicos da Cinemática",
+                text: "Um ônibus de transporte público está se movendo ao longo de uma avenida linear. Um passageiro está sentado confortavelmente em sua poltrona. Em relação a outro passageiro sentado na poltrona ao lado, o primeiro está em __________, e em relação a um pedestre estático na calçada observando o ônibus passar, ele está em __________.",
+                options: [
+                    "movimento | repouso",
+                    "repouso | repouso",
+                    "repouso | movimento",
+                    "movimento | movimento"
+                ],
+                correct: 2,
+                explanation: "O conceito de movimento e repouso depende estritamente do referencial adotado. Como a distância entre os dois passageiros não muda com o tempo, um está em repouso em relação ao outro. Já em relação ao pedestre na calçada, a posição do passageiro altera-se a cada instante, configurando movimento."
+            },
+            {
+                id: 2,
+                topic: "Conceitos Básicos da Cinemática",
+                text: "Uma passageira viaja em um vagão de trem de alta velocidade que se desloca em movimento retilíneo uniforme. Em um dado momento, ela estende a mão e deixa cair uma pequena chave esférica de metal. Desprezando efeitos de resistência do ar, qual o formato da trajetória observada, respectivamente, pela passageira dentro do vagão e por um fiscal fixo na plataforma da estação exterior?",
+                options: [
+                    "Uma reta vertical | Uma reta vertical",
+                    "Um arco de parábola | Uma reta vertical",
+                    "Uma reta vertical | Um arco de parábola",
+                    "Um arco de parábola | Um arco de parábola"
+                ],
+                correct: 2,
+                explanation: "Para a passageira no mesmo referencial do trem, a esfera cai em linha reta vertical devido à gravidade. Para o fiscal na plataforma, a esfera já possui a velocidade horizontal inicial do trem, combinando um movimento retilíneo uniforme horizontal com um movimento acelerado de queda livre, resultando em uma trajetória parabólica."
+            },
+            {
+                id: 3,
+                topic: "Conceitos Básicos da Cinemática",
+                text: "Em física mecânica, modelamos corpos reais como pontos materiais ou corpos extensos. Assinale a alternativa na qual o objeto mencionado pode ser idealizado perfeitamente como um <span class='math-expr'>ponto material</span>.",
+                options: [
+                    "Um gigantesco navio petroleiro executando manobras cirúrgicas de atracação em um porto estreito.",
+                    "O planeta Terra sendo analisado em seu movimento orbital de translação anual ao redor do Sol.",
+                    "Um carro de luxo efetuando uma baliza de estacionamento em uma vaga delimitada rígida.",
+                    "Uma ginasta artística realizando movimentos rotacionais complexos em torno de uma barra fixa."
+                ],
+                correct: 1,
+                explanation: "Um corpo é considerado ponto material quando suas dimensões físicas são desprezíveis em relação à escala do fenômeno estudado. O tamanho da Terra é totalmente insignificante comparado ao raio monumental de sua órbita ao redor do Sol. Nas demais opções, o tamanho do objeto é comparável à escala do problema e interfere diretamente na dinâmica."
+            },
+            {
+                id: 4,
+                topic: "Conceitos Básicos da Cinemática",
+                text: "Um maratonista treina em uma pista de corrida circular de raio <span class='math-expr'>R = 50 m</span>. Partindo de um marco inicial zero, ele corre continuamente até completar exatamente uma volta e meia na pista, cessando o movimento. Adotando <span class='math-expr'>π ≈ 3,14</span>, determine o módulo do vetor deslocamento e a distância real percorrida pelo atleta, nesta ordem:",
+                options: [
+                    "0 metros e 471 metros",
+                    "100 metros e 471 metros",
+                    "100 metros e 314 metros",
+                    "50 metros e 157 metros"
+                ],
+                correct: 1,
+                explanation: "O deslocamento é a distância em linha reta entre as posições inicial e final. Após 1,5 voltas, o atleta está no ponto diametralmente oposto ao início, logo o deslocamento é o diâmetro da pista (2 × 50 = 100 m). A distância percorrida é o comprimento da trajetória: 1,5 × (2 · π · R) = 1,5 × 2 × 3,14 × 50 = 471 metros."
+            },
+            {
+                id: 5,
+                topic: "MRU",
+                text: "Um automóvel percorre uma rodovia retilínea monitorada com seu movimento mapeado pela função horária estrutural: <span class='math-expr'>S = 20 + 15t</span> (expressa rigorosamente em unidades do Sistema Internacional). É correto inferir a posição do veículo após <span class='math-expr'>t = 12 s</span> e a natureza de sua velocidade escalar:",
+                options: [
+                    "180 metros, com velocidade variável de 20 m/s.",
+                    "200 metros, com velocidade escalar constante de 15 m/s.",
+                    "160 metros, com velocidade escalar constante de 15 m/s.",
+                    "200 metros, com aceleração constante de 15 m/s²."
+                ],
+                correct: 1,
+                explanation: "Na função horária do MRU (S = S0 + vt), a velocidade é o coeficiente termelar do tempo (v = 15 m/s) e é constante. Substituindo o instante dado: S = 20 + 15(12) = 20 + 180 = 200 metros."
+            },
+            {
+                id: 6,
+                topic: "MRU",
+                text: "Ao projetar o gráfico de comportamento Posição (<span class='math-expr'>S</span>) versus Tempo (<span class='math-expr'>t</span>) para um corpo executando Movimento Retilíneo Uniforme, obtém-se uma linha reta contínua inclinada descendentemente (com declividade negativa em relação ao eixo horizontal do tempo). Esse movimento deve ser categorizado como:",
+                options: [
+                    "Progressivo e retardado, pois a posição diminui de forma exponencial.",
+                    "Retrógrado e uniforme, indicando uma velocidade constante de valor negativo.",
+                    "Acelerado e linear, demonstrando ganho de velocidade constante.",
+                    "Estático, uma vez que retas descendentes indicam perda total de energia."
+                ],
+                correct: 1,
+                explanation: "No gráfico S x t, a inclinação da reta nos dá a velocidade. Uma reta descendente possui inclinação negativa, indicando velocidade constante menor que zero (v < 0). Movimentos com velocidade negativa que caminham contra a orientação padrão da trajetória são classificados como retrógrados."
+            },
+            {
+                id: 7,
+                topic: "MRU",
+                text: "Dois trens de carga, Alfa e Beta, trafegam na mesma linha férrea retilínea longa direcionando-se mutuamente em sentidos inversos (em rota de aproximação). O trem Alfa mantém velocidade constante de módulo <span class='math-expr'>20 m/s</span> e o trem Beta mantém velocidade constante de módulo <span class='math-expr'>30 m/s</span>. Se no cronômetro inicial (<span class='math-expr'>t = 0</span>) a distância absoluta entre eles é de <span class='math-expr'>500 metros</span>, quanto tempo levará para o cruzamento frontal dos trens?",
+                options: [
+                    "25 segundos",
+                    "16,6 segundos",
+                    "10 segundos",
+                    "50 segundos"
+                ],
+                correct: 2,
+                explanation: "Usando o conceito premium de velocidade relativa: como os dois móveis se deslocam em sentidos opostos, as magnitudes de suas velocidades se somam para determinar a velocidade de aproximação: Vrel = 20 + 30 = 50 m/s. O tempo necessário para anular a distância de separação inicial será t = ΔS / Vrel = 500 / 50 = 10 segundos."
+            },
+            {
+                id: 8,
+                topic: "MRU",
+                text: "Um protótipo de trem magnético de alta tecnologia percorre um trecho retilíneo experimental plano com velocidade estritamente constante. Os computadores de bordo registram que o veículo cobre uma distância de <span class='math-expr'>180 km</span> em exatamente <span class='math-expr'>30 minutos</span>. Determine a velocidade escalar deste veículo convertida para metros por segundo (<span class='math-expr'>m/s</span>).",
+                options: [
+                    "50 m/s",
+                    "100 m/s",
+                    "360 m/s",
+                    "60 m/s"
+                ],
+                correct: 1,
+                explanation: "Primeiramente calculamos a velocidade em km/h. Como 30 minutos correspondem a meia hora (0,5 h), temos V = 180 km / 0,5 h = 360 km/h. Para realizar a conversão padrão para o Sistema Internacional (m/s), dividimos o valor por 3,6: 360 / 3,6 = 100 m/s."
+            },
+            {
+                id: 9,
+                topic: "MRUV",
+                text: "Um bólido de testes de arrancada parte do repouso absoluto (<span class='math-expr'>v₀ = 0</span>) e desenvolve aceleração escalar escalar retilínea rigorosamente constante de módulo igual a <span class='math-expr'>4 m/s²</span>. Qual será o espaço linear total percorrido por esse veículo durante os primeiros <span class='math-expr'>6 segundos</span> de sua movimentação?",
+                options: [
+                    "24 metros",
+                    "48 metros",
+                    "144 metros",
+                    "72 metros"
+                ],
+                correct: 3,
+                explanation: "No MRUV, o espaço percorrido a partir do repouso pode ser calculado diretamente pela função horária da posição simplificada: S = (a · t²) / 2. Substituindo os valores conhecidos: S = (4 · 6²) / 2 = 2 · 36 = 72 metros."
+            },
+            {
+                id: 10,
+                topic: "MRUV",
+                text: "Um automóvel convencional desloca-se por uma avenida retilínea com velocidade de segurança de <span class='math-expr'>30 m/s</span> quando o condutor avista um bloqueio e aciona os freios abruptamente. O sistema de freios gera uma desaceleração uniforme e constante classificada como <span class='math-expr'>a = -5 m/s²</span>. Utilizando os conceitos mecânicos adequados, calcule a distância necessária para a parada completa do veículo.",
+                options: [
+                    "90 metros",
+                    "45 metros",
+                    "60 metros",
+                    "30 metros"
+                ],
+                correct: 0,
+                explanation: "Como o enunciado não menciona nem solicita a variável tempo, aplicamos a histórica Equação de Torricelli: v² = v₀² + 2aΔS. Na parada total do carro, a velocidade final v é igual a zero. Logo: 0 = (30)² + 2(-5)ΔS => 0 = 900 - 10ΔS => 10ΔS = 900 => ΔS = 90 metros."
+            },
+            {
+                id: 11,
+                topic: "MRUV",
+                text: "Analisa-se o gráfico da velocidade (<span class='math-expr'>v</span>) em função do tempo (<span class='math-expr'>t</span>) de uma partícula em MRUV. A curva é descrita por uma reta ascendente que se inicia no valor <span class='math-expr'>10 m/s</span> para <span class='math-expr'>t = 0</span> e alcança o patamar de <span class='math-expr'>40 m/s</span> no instante de <span class='math-expr'>5 segundos</span>. Determine a aceleração do sistema e o deslocamento realizado por meio da propriedade geométrica gráfica:",
+                options: [
+                    "6 m/s² e 125 metros",
+                    "8 m/s² e 150 metros",
+                    "6 m/s² e 150 metros",
+                    "30 m/s² e 250 metros"
+                ],
+                correct: 0,
+                explanation: "A aceleração provém da variação da velocidade no tempo: a = Δv / Δt = (40 - 10) / 5 = 30 / 5 = 6 m/s². O deslocamento espacial em um gráfico v x t equivale numericamente à área sob a reta (área do trapézio): Area = [(B + b) · h] / 2 = [(40 + 10) · 5] / 2 = [50 · 5] / 2 = 125 metros."
+            },
+            {
+                id: 12,
+                topic: "MRUV",
+                text: "Uma pequena esfera de tungstênio é solta a partir do topo de uma torre elevada em uma câmara de vácuo, caracterizando um movimento clássico de queda livre vertical. Considerando a aceleração da gravidade local com módulo estável de <span class='math-expr'>g = 10 m/s²</span> e sabendo que a queda livre perdura por exatos <span class='math-expr'>3 segundos</span>, qual a velocidade da esfera ao impactar o piso da câmara?",
+                options: [
+                    "15 m/s",
+                    "45 m/s",
+                    "30 m/s",
+                    "90 m/s"
+                ],
+                correct: 2,
+                explanation: "A queda livre é uma ramificação direta do MRUV com velocidade inicial nula (v₀ = 0) e aceleração igual à gravidade local (a = g). A velocidade em qualquer instante é calculada através da relação direta v = g · t. Portanto: v = 10 · 3 = 30 m/s."
+            },
+            {
+                id: 13,
+                topic: "Leis de Newton",
+                text: "Um pesado livro didático encontra-se estático em repouso sobre a superfície plana de uma mesa de estudos horizontal em uma sala de aula de colégio. Embasado exclusivamente na Primeira Lei de Newton (Princípio da Inércia), assinale a proposição correta:",
+                options: [
+                    "Não há nenhuma força mecânica atuando sobre o livro na situação descrita.",
+                    "A resultante vetorial de todas as forças que atuam sobre o livro é nula, logo, por inércia, ele preserva seu estado de repouso.",
+                    "O livro não se move pois o coeficiente de atrito estático com o ar é superior à massa da Terra.",
+                    "O livro mantém-se parado pois a força normal cancela a inércia intrínseca da matéria."
+                ],
+                correct: 1,
+                explanation: "A Lei da Inércia postula que se a resultante das forças que agem sobre um corpo for nula (Fr = 0), o corpo obrigatoriamente manterá seu estado cinemático atual: se estava em repouso, permanecerá em repouso. Forças como Peso e Normal atuam no livro, mas se equilibram perfeitamente."
+            },
+            {
+                id: 14,
+                topic: "Leis de Newton",
+                text: "Um bloco maciço metálico com massa constante <span class='math-expr'>m = 8 kg</span> repousa sobre uma mesa horizontal perfeitamente polida e lubrificada (gerando um cenário ideal sem qualquer atrito). Simultaneamente, o bloco passa a sofrer a ação de duas forças horizontais alinhadas em sentidos contrários: <span class='math-expr'>F₁ = 30 N</span> direcionada para a direita e <span class='math-expr'>F₂ = 14 N</span> direcionada para a esquerda. O módulo da aceleração resultante é:",
+                options: [
+                    "5,5 m/s²",
+                    "2,0 m/s²",
+                    "3,75 m/s²",
+                    "4,0 m/s²"
+                ],
+                correct: 1,
+                explanation: "Como as forças atuam na mesma direção mas em sentidos opostos, a Força Resultante horizontal é a subtração de seus módulos: Fr = F₁ - F₂ = 30 - 14 = 16 N para a direita. Pela Segunda Lei de Newton (Fr = m · a), calculamos a aceleração: 16 = 8 · a => a = 2 m/s²."
+            },
+            {
+                id: 15,
+                topic: "Leis de Newton",
+                text: "Um cavalo forte puxa com vigor uma carroça de madeira por uma estrada rural. O animal exerce uma força horizontal orientada para frente sobre a estrutura da carroça. Com base na Terceira Lei de Newton (Ação e Reação), a carroça reage aplicando uma força de idêntico módulo e direção, porém sentido oposto (para trás), sobre o cavalo. Diante disso, como se explica o fato de o conjunto conseguir acelerar e sair do lugar?",
+                options: [
+                    "O cavalo consegue o movimento porque sua força muscular consegue ser ligeiramente maior que a força de reação da carroça.",
+                    "As forças de ação e reação são aplicadas em corpos distintos (uma na carroça, outra no cavalo) e por isso nunca se anulam mutuamente. O avanço ocorre porque a força que o cavalo aplica no chão supera as resistências externas.",
+                    "A reação da carroça só passa a existir após o início do movimento, permanecendo nula enquanto estática.",
+                    "O movimento só se estabelece caso a massa da carroça seja nula, eliminando o vetor de reação contrária."
+                ],
+                correct: 1,
+                explanation: "As forças que compõem um par ação e reação agem sempre em corpos diferentes (Ação na carroça, Reação no cavalo). Portanto, elas nunca podem se anular mutuamente no mesmo corpo. O conjunto acelera porque a força de atrito que o solo exerce para a frente nos cascos do cavalo (reação ao empurrão que o cavalo dá no chão para trás) é maior que a força de resistência das rodas da carroça."
+            },
+            {
+                id: 16,
+                topic: "Leis de Newton",
+                text: "Um engenheiro aeroespacial executa reparos externos na estrutura da Estação Espacial Internacional, flutuando em um ambiente de microgravidade severa e vácuo quase perfeito (ausência de ar e de atritos significativos). Em determinado instante, ele arremessa uma chave inglesa de <span class='math-expr'>1 kg</span> para longe com velocidade de <span class='math-expr'>5 m/s</span>. Após perder o contato com a mão do astronauta, a ferramenta:",
+                options: [
+                    "Irá diminuir de velocidade progressivamente até parar no espaço devido à falta de atmosfera de sustentação.",
+                    "Descreverá de imediato uma trajetória orbital elíptica fechada ao redor do corpo do próprio astronauta.",
+                    "Seguirá indefinidamente em linha reta mantendo a velocidade rigorosamente constante de 5 m/s.",
+                    "Sofrerá uma força de frenagem inercial espontânea, reduzindo sua energia de forma imediata."
+                ],
+                correct: 2,
+                explanation: "Livre da ação de forças externas resultantes significativas no espaço profundo (vácuo e longe de astros), um corpo em movimento tende, por inércia (1ª Lei), a perpetuar seu movimento retilíneo uniforme (MRU) com velocidade vetorial constante ad eternum."
+            },
+            {
+                id: 17,
+                topic: "Forças Especiais (Tração, Normal, Atrito, Peso)",
+                text: "No estudo conceitual das forças de contato que regem o cotidiano, a Força de Atrito possui papel protagonista. Analisando as propriedades estruturais desta força microscópica sem apelo a equações matemáticas, escolha a afirmação cientificamente VERDADEIRA:",
+                options: [
+                    "A força de atrito dinâmico é invariável e possui módulo intrinsecamente superior à força de atrito estático máximo entre duas superfícies.",
+                    "A força de atrito atua exclusivamente de forma prejudicial aos movimentos, sendo impossível caminhar ou tracionar veículos se o atrito for elevado.",
+                    "A força de atrito emerge em decorrência das interações eletromagnéticas entre as rugosidades, picos e vales microscópicos das duas superfícies pressionadas, opondo-se à tendência de escorregamento relativo.",
+                    "O atrito estático mantém um valor fixo imutável desde o início, independentemente da intensidade da força externa aplicada no objeto."
+                ],
+                correct: 2,
+                explanation: "O atrito se origina no contato imperfeito das superfícies em nível molecular. Ele age opondo-se ao deslizamento relativo entre as duas superfícies em contato. O atrito estático é variável (vai de zero até um limite máximo) e se ajusta à força externa que tenta gerar o escorregamento."
+            },
+            {
+                id: 18,
+                topic: "Forças Especiais (Tração, Normal, Atrito, Peso)",
+                text: "Um sofisticado sensor de calibração laboratorial apresenta uma Massa invariável de <span class='math-expr'>12 kg</span> aferida em um laboratório padrão na Terra (onde a aceleração da gravidade equivale a <span class='math-expr'>g_Terra = 10 m/s²</span>). Esse sensor é transportado para uma base científica na superfície da Lua, cujo campo gravitacional local é de <span class='math-expr'>g_Lua = 1,6 m/s²</span>. Quais são os valores de Massa e Peso do dispositivo na Lua?",
+                options: [
+                    "1,92 kg e 19,2 Newtons",
+                    "12 kg e 120 Newtons",
+                    "12 kg e 19,2 Newtons",
+                    "1,92 kg e 120 Newtons"
+                ],
+                correct: 2,
+                explanation: "A massa mede a quantidade de matéria de um corpo e permanece inalterada em qualquer ponto do universo (12 kg na Terra e na Lua). Já o Peso é a força de atração gravitacional local (P = m · g), variando com o campo. Na Lua: P = 12 kg × 1,6 m/s² = 19,2 N."
+            },
+            {
+                id: 19,
+                topic: "Forças Especiais (Tração, Normal, Atrito, Peso)",
+                text: "Um container cúbico de mantimentos repousa estável sobre a superfície inclinada de uma rampa de acesso em um depósito industrial. A Força Normal exercida pelo plano da rampa sobre a base do container é conceitualmente definida como uma força que atua em qual linha de ação e sentido?",
+                options: [
+                    "Sempre na vertical absoluta apontando para cima, em oposição direta à gravidade.",
+                    "Paralela à superfície da rampa inclidada, impedindo o container de deslizar para baixo.",
+                    "Perpendicular (formando um ângulo reto de 90°) com a superfície de contato, apontando para fora desta.",
+                    "Na exata mesma direção e sentido vetorizado do Peso do container."
+                ],
+                correct: 2,
+                explanation: "O termo geométrico 'Normal' indica perpendicularidade. A força normal é uma força de reação de suporte compressivo que superfícies exercem quando corpos são pressionados contra elas, agindo sempre de modo perpendicular (90 graus) à região de contato, apontando para fora."
+            },
+            {
+                id: 20,
+                topic: "Forças Especiais (Tração, Normal, Atrito, Peso)",
+                text: "Um cabo de aço acoplado a um guindaste industrial ergue verticalmente uma carga pesada de minério. Os sensores do operador indicam que a carga está subindo com uma velocidade rigorosamente constante. Assumindo as condições ideais de modelagem física, o que podemos afirmar sobre a intensidade da força de Tração (<span class='math-expr'>T</span>) no cabo mecânico comparada ao Peso (<span class='math-expr'>P</span>) da carga?",
+                options: [
+                    "A Tração deve possuir módulo estritamente superior ao Peso para manter a carga em movimento ascendente.",
+                    "A Tração possui módulo exatamente idêntico ao Peso, pois a velocidade constante caracteriza equilíbrio dinâmico e força resultante vertical nula.",
+                    "A Tração é inferior ao Peso devido ao auxílio da inércia ascendente adquirida pela velocidade.",
+                    "A Tração torna-se nula a partir do instante em que a aceleração cessa e o movimento se estabiliza."
+                ],
+                correct: 1,
+                explanation: "Subir com velocidade constante configura um Movimento Retilíneo Uniforme (MRU), ou seja, aceleração igual a zero. Pela Segunda Lei de Newton, se a aceleração é nula, a Força Resultante obrigatoriamente deve ser nula (Fr = 0). Portanto, a força para cima (Tração) deve contrabalançar perfeitamente a força para baixo (Peso), possuindo módulos rigorosamente iguais."
+            }
+        ];
+
+        // Advanced Metrics Management State
+        let currentQuestionIdx = 0;
+        let userAnswers = new Array(questions.length).fill(null);
+        let timeElapsed = 0; // in seconds
+        let timerInterval = null;
+        const topicMetrics = {
+            "Conceitos Básicos da Cinemática": { total: 4, correct: 0 },
+            "MRU": { total: 4, correct: 0 },
+            "MRUV": { total: 4, correct: 0 },
+            "Leis de Newton": { total: 4, correct: 0 },
+            "Forças Especiais (Tração, Normal, Atrito, Peso)": { total: 4, correct: 0 }
+        };
+
+        // Initialize Simulator
+        function initQuiz() {
+            renderQuestionGrid();
+            loadQuestion(0);
+            startTimer();
+        }
+
+        // Start High-Accuracy Timer
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeElapsed++;
+                const mins = String(Math.floor(timeElapsed / 60)).padStart(2, '0');
+                const secs = String(timeElapsed % 60).padStart(2, '0');
+                document.getElementById('time-display').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        // Build Sidebar Visual Navigation Grid
+        function renderQuestionGrid() {
+            const gridContainer = document.getElementById('q-grid');
+            gridContainer.innerHTML = '';
+            questions.forEach((q, idx) => {
+                const btn = document.createElement('div');
+                btn.className = `grid-item ${idx === currentQuestionIdx ? 'active' : ''}`;
+                btn.id = `grid-item-${idx}`;
+                btn.innerText = idx + 1;
+                btn.onclick = () => loadQuestion(idx);
+                gridContainer.appendChild(btn);
+            });
+        }
+
+        // Load Active Question to UI
+        function loadQuestion(idx) {
+            // Update active sidebar state
+            document.getElementById(`grid-item-${currentQuestionIdx}`).classList.remove('active');
+            currentQuestionIdx = idx;
+            document.getElementById(`grid-item-${currentQuestionIdx}`).classList.add('active');
+
+            const q = questions[idx];
+            document.getElementById('topic-badge').innerText = q.topic;
+            document.getElementById('q-text').innerHTML = q.text;
+
+            // Render Options
+            const optionsBox = document.getElementById('options-box');
+            optionsBox.innerHTML = '';
+            
+            const letters = ['A', 'B', 'C', 'D'];
+            q.options.forEach((opt, optIdx) => {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                if (userAnswers[idx] !== null) button.classList.add('disabled');
+                
+                // Styles if already answered
+                if (userAnswers[idx] !== null) {
+                    if (optIdx === q.correct) {
+                        button.classList.add('correct-ans');
+                    } else if (userAnswers[idx] === optIdx) {
+                        button.classList.add('wrong-ans');
+                    }
+                } else {
+                    button.onclick = () => handleSelectOption(optIdx);
+                }
+
+                button.innerHTML = `
+                    <div class="option-letter">${letters[optIdx]}</div>
+                    <div>${opt}</div>
+                `;
+                optionsBox.appendChild(button);
+            });
+
+            // Handle Explanation box visibility
+            const expBox = document.getElementById('explanation-box');
+            if (userAnswers[idx] !== null) {
+                document.getElementById('explanation-text').innerText = q.explanation;
+                expBox.style.display = 'block';
+            } else {
+                expBox.style.display = 'none';
+            }
+
+            // Update footer controls
+            document.getElementById('btn-prev').disabled = idx === 0;
+            document.getElementById('btn-next').innerText = idx === questions.length - 1 ? 'Concluir Simulado' : 'Próxima ➡️';
+            
+            // Update progress text
+            const answeredCount = userAnswers.filter(a => a !== null).length;
+            document.getElementById('progress-text').innerText = `${answeredCount} / ${questions.length}`;
+        }
+
+        // Handle Real-time Option Selection & Valuation
+        function handleSelectOption(selectedOptIdx) {
+            if (userAnswers[currentQuestionIdx] !== null) return; // Prevent double answering
+            
+            userAnswers[currentQuestionIdx] = selectedOptIdx;
+            const q = questions[currentQuestionIdx];
+            const gridItem = document.getElementById(`grid-item-${currentQuestionIdx}`);
+
+            if (selectedOptIdx === q.correct) {
+                gridItem.classList.add('correct');
+            } else {
+                gridItem.classList.add('wrong');
+            }
+
+            // Reload current question to display feedback state immediately
+            loadQuestion(currentQuestionIdx);
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIdx < questions.length - 1) {
+                loadQuestion(currentQuestionIdx + 1);
+            } else {
+                showResultsDashboard();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIdx > 0) {
+                loadQuestion(currentQuestionIdx - 1);
+            }
+        }
+
+        // Compute Advanced Analytics and Render Dashboard
+        function showResultsDashboard() {
+            clearInterval(timerInterval); // Halt clock
+            
+            // Hide quiz environment, show analytics dashboard
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('sidebar-nav').classList.add('hidden');
+            document.getElementById('timer').classList.add('hidden');
+            document.getElementById('dashboard-screen').style.display = 'block';
+
+            // Reset metric tallies
+            Object.keys(topicMetrics).forEach(k => topicMetrics[k].correct = 0);
+            
+            let totalCorrect = 0;
+            userAnswers.forEach((ans, idx) => {
+                if (ans === questions[idx].correct) {
+                    totalCorrect++;
+                    topicMetrics[questions[idx].topic].correct++;
+                }
+            });
+
+            const accuracy = Math.round((totalCorrect / questions.length) * 100);
+            const score = totalCorrect * 100; // 100 pts per correct answer
+
+            // Populate dashboard metrics text
+            document.getElementById('metric-accuracy').innerText = `${accuracy}%`;
+            document.getElementById('metric-score').innerText = `${score} / 2000`;
+            
+            const mins = String(Math.floor(timeElapsed / 60)).padStart(2, '0');
+            const secs = String(timeElapsed % 60).padStart(2, '0');
+            document.getElementById('metric-time').innerText = `${mins}:${secs}`;
+
+            // Define Cognitive Status Profile
+            let statusText = "";
+            if (accuracy < 50) statusText = "Revisão Crítica";
+            else if (accuracy < 80) statusText = "Operacional Sólido";
+            else statusText = "Físico Premium";
+            document.getElementById('metric-status').innerText = statusText;
+
+            // Render Topic Progress Rows Dynamically
+            const breakdownContainer = document.getElementById('topic-breakdown-container');
+            breakdownContainer.innerHTML = '';
+            
+            const labels = [];
+            const accuracyData = [];
+
+            Object.keys(topicMetrics).forEach(topic => {
+                const data = topicMetrics[topic];
+                const pct = Math.round((data.correct / data.total) * 100);
+                
+                labels.push(topic.split(' (')[0]); // Clean labels for radar chart
+                accuracyData.push(pct);
+
+                const row = document.createElement('div');
+                row.className = 'topic-row';
+                row.innerHTML = `
+                    <div class="topic-row-header">
+                        <span>${topic}</span>
+                        <span>${data.correct}/${data.total} (${pct}%)</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+                    </div>
+                `;
+                breakdownContainer.appendChild(row);
+            });
+
+            // Initialize Advanced Chart.js Radar Visualization
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Sua Proficiência (%)',
+                        data: accuracyData,
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        borderColor: '#6366f1',
+                        pointBackgroundColor: '#818cf8',
+                        pointBorderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#24324f' },
+                            grid: { color: '#24324f' },
+                            pointLabels: { color: '#9ca3af', font: { size: 10, family: 'Inter' } },
+                            ticks: { display: false },
+                            min: 0,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Boot system on window load
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>
